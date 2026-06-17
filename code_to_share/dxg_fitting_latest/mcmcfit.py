@@ -202,24 +202,31 @@ class cl_Dg_fit:
         self.cl_combined = []
         self.err_combined = []
 
-        for i in range(self.nz):
-            file = h5py.File(fit_files[i], 'r')
-            self.l_fit.append(file["bin_centers"][:])
-            self.l_combined.extend(file["bin_centers"][self.bin_excl:])
+        for i, fit_file in enumerate(fit_files):
+            with h5py.File(fit_file, 'r') as file:
+                # read all the datasets at once
+                bin_centers = file["bin_centers"][:]
+                cl          = file["cl"][0, :]
+                error       = file["error"][0, :]
+                bin_edges   = file["bin_edges"][:]
+                lmax        = file["lmax"][()]
+
+            self.l_fit.append(bin_centers)
+            self.l_combined.extend(bin_centers[bin_excl:])
 
             # taking the 0th element of the first axis because each input file only contains one redshift bin 
-            self.cl_fit.append(file["cl"][0, :])
-            self.cl_combined.extend(file["cl"][0, self.bin_excl:])
+            self.cl_fit.append(cl)
+            self.cl_combined.extend(cl[bin_excl:])
 
-            self.err_fit.append(file["error"][0, :])
-            self.err_combined.extend(file["error"][0, self.bin_excl:])
+            self.err_fit.append(error)
+            self.err_combined.extend(error[bin_excl:])
 
             if i == 0:
-                self.bin_edges = file["bin_edges"][:]
-                self.lmax = file["lmax"][()]
+                self.bin_edges = bin_edges
+                self.lmax = lmax
             else:
-                assert all(self.bin_edges == file["bin_edges"][:])
-                assert self.lmax == file["lmax"][()]
+                assert all(self.bin_edges == bin_edges)
+                assert self.lmax == lmax
 
         self.l_data = self.l_fit[0]
 
@@ -231,15 +238,23 @@ class cl_Dg_fit:
         self.l_plot = [] 
         self.cl_plot = []
         self.err_plot = []
-        for i in range(self.nz):
-            file = h5py.File(plot_files[i], 'r')
-            self.l_plot.append(file["bin_centers"][:])
-            self.cl_plot.append(file["cl"][0, :])
-            self.err_plot.append(file["error"][0, :])
+
+        for i, plot_file in enumerate(plot_files):
+            with h5py.File(plot_file, 'r') as file:
+                bin_centers = file["bin_centers"][:]
+                cl          = file["cl"][0, :]
+                error       = file["error"][0, :]
+                bin_edges   = file["bin_edges"][:]
+                lmax        = file["lmax"][()]
+
+            self.l_plot.append(bin_centers)
+            self.cl_plot.append(cl)
+            self.err_plot.append(error)
+
             if i == 0:
-                self.bin_edges_simple = file["bin_edges"][:]
-                assert all(self.bin_edges_simple == file["bin_edges"][:])
-            assert self.lmax == file["lmax"][()]
+                self.bin_edges_simple = bin_edges
+                assert np.array_equal(self.bin_edges_simple, bin_edges)
+            assert self.lmax == lmax
 
     # convolving the bandpower: not used for now because fitting would have been too slow
     
