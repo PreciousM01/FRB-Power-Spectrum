@@ -333,10 +333,18 @@ class cl_Dg_fit:
         return n_norm
     
     def get_p_z_norm(self, ALPHA, Z_STAR):
-    
+
+        # Within one likelihood evaluation, combined_model calls this once per z-bin (and twice per sub-bin) with IDENTICAL (ALPHA, Z_STAR). 
+        # The underlying incomp_gamma chain is ~70% of runtime, so cache on the parameter pair: recompute only when ALPHA or Z_STAR actually changes.
+        cache = getattr(self, "_pz_cache", None)
+        if cache is not None and cache[0] == ALPHA and cache[1] == Z_STAR:
+            return cache[2], cache[3]
+
         n = self.get_n_z_norm(ALPHA, Z_STAR)
-    
-        return 4*np.pi*self.chi_grid**2*n*self.dchi_dz_grid/self.Nf, n
+        pz = 4*np.pi*self.chi_grid**2*n*self.dchi_dz_grid/self.Nf
+
+        self._pz_cache = (ALPHA, Z_STAR, pz, n)
+        return pz, n
 
     def compute_Nfz(self, pz, zs):
         # number of FRBs beyond redshift z
