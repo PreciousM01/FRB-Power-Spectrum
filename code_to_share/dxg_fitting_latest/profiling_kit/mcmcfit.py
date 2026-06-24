@@ -379,11 +379,12 @@ class cl_Dg_fit:
                 pm = self.sub_bin_pm[z_ind] # find the sub bin power spectrum
                 pfg = get_biased_cross_spectrum(pm.k_over_h, pm.z[i], pm.pk[i], bf, bg)
                 peg = get_biased_cross_spectrum_exp(pm.k_over_h, pm.z[i], pm.pk[i], self.be, bg, 1/cut_scale)
-                Peg_interp = interp1d(peg.k_over_h[:], peg.pk[:], kind='linear') # units: Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
-                Pfg_interp = interp1d(pfg.k_over_h[:], pfg.pk[:], kind='linear')  
+                k_eval = l/chi_g/fp.h        # (use self.chi_g[z_ind] in the else-branch)
+                Peg_at_l = np.interp(k_eval, peg.k_over_h, peg.pk)
+                Pfg_at_l = np.interp(k_eval, pfg.k_over_h, pfg.pk)  
 
-                term1 = self.ne0*(1 + z)/chi_g**2*Peg_interp(l/chi_g/fp.h)*(fp.h**-3)*Nfz/self.Nf
-                term2 = 4*np.pi*nz[pz_index]/self.Nf*Pfg_interp(l/chi_g/fp.h)*(fp.h**-3)*(dm_bar + DM_host - self.D_bar)
+                term1 = self.ne0*(1 + z)/chi_g**2*Peg_at_l*(fp.h**-3)*Nfz/self.Nf
+                term2 = 4*np.pi*nz[pz_index]/self.Nf*Pfg_at_l*(fp.h**-3)*(dm_bar + DM_host - self.D_bar)
 
                 this_cl_Dg = (term1 + term2)*w
                 cl_Dg += this_cl_Dg
@@ -400,12 +401,14 @@ class cl_Dg_fit:
             
             pfg = get_biased_cross_spectrum(self.pm.k_over_h, self.pm.z[z_ind], self.pm.pk[z_ind], bf, bg)
             peg = get_biased_cross_spectrum_exp(self.pm.k_over_h, self.pm.z[z_ind], self.pm.pk[z_ind], self.be, bg, 1/cut_scale)
-            Peg_interp = interp1d(peg.k_over_h[:], peg.pk[:], kind='linear') # units: Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
-            Pfg_interp = interp1d(pfg.k_over_h[:], pfg.pk[:], kind='linear')
-    
-            term1 = self.ne0*(1 + z)/self.chi_g[z_ind]**2*Peg_interp(l/self.chi_g[z_ind]/fp.h)*(fp.h**-3)*Nfz/self.Nf
-            term2 = pz[pz_index]*(self.chi_g[z_ind]**(-2))/self.dchi_dz[z_ind]*Pfg_interp(l/self.chi_g[z_ind]/fp.h)*(fp.h**-3)*(self.dm_bar[z_ind] + DM_host - self.D_bar)
-    
+
+            k_eval = l/self.chi_g[z_ind]/fp.h   # uses this branch's chi_g[z_ind]
+            Peg_at_l = np.interp(k_eval, peg.k_over_h, peg.pk) # Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
+            Pfg_at_l = np.interp(k_eval, pfg.k_over_h, pfg.pk)
+
+            term1 = self.ne0*(1 + z)/self.chi_g[z_ind]**2*Peg_at_l*(fp.h**-3)*Nfz/self.Nf
+            term2 = pz[pz_index]*(self.chi_g[z_ind]**(-2))/self.dchi_dz[z_ind]*Pfg_at_l*(fp.h**-3)*(self.dm_bar[z_ind] + DM_host - self.D_bar)
+
             cl_Dg = term1 + term2
 
         # gaussian beam suppression
@@ -526,11 +529,12 @@ class cl_Dg_fit:
                 pm = self.sub_bin_pm[z_ind] # find the sub bin power spectrum
                 pfg = get_biased_cross_spectrum(pm.k_over_h, pm.z[i], pm.pk[i], bf, bg)
                 peg = get_biased_cross_spectrum_exp(pm.k_over_h, pm.z[i], pm.pk[i], self.be, bg, 1/cut_scale)
-                Peg_interp = interp1d(peg.k_over_h[:], peg.pk[:], kind='linear') # units: Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
-                Pfg_interp = interp1d(pfg.k_over_h[:], pfg.pk[:], kind='linear')  
+                k_eval = l/chi_g/fp.h        # (use self.chi_g[z_ind] in the else-branch)
+                Peg_at_l = np.interp(k_eval, peg.k_over_h, peg.pk)
+                Pfg_at_l = np.interp(k_eval, pfg.k_over_h, pfg.pk)  
 
-                term1 = self.ne0*(1 + z)/chi_g**2*Peg_interp(l/chi_g/fp.h)*(fp.h**-3)*Nfz/self.Nf
-                term2 = 4*np.pi*nz[pz_index]/self.Nf*Pfg_interp(l/chi_g/fp.h)*(fp.h**-3)*(dm_bar + DM_host - self.D_bar)
+                term1 = self.ne0*(1 + z)/chi_g**2*Peg_at_l*(fp.h**-3)*Nfz/self.Nf
+                term2 = 4*np.pi*nz[pz_index]/self.Nf*Pfg_at_l*(fp.h**-3)*(dm_bar + DM_host - self.D_bar)
 
                 this_cl_Dg = (term1 + term2)*w
                 cl_Dg += this_cl_Dg
@@ -549,12 +553,14 @@ class cl_Dg_fit:
             
             pfg = get_biased_cross_spectrum(self.pm.k_over_h, self.pm.z[z_ind], self.pm.pk[z_ind], bf, bg)
             peg = get_biased_cross_spectrum_exp(self.pm.k_over_h, self.pm.z[z_ind], self.pm.pk[z_ind], self.be, bg, 1/cut_scale)
-            Peg_interp = interp1d(peg.k_over_h[:], peg.pk[:], kind='linear') # units: Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
-            Pfg_interp = interp1d(pfg.k_over_h[:], pfg.pk[:], kind='linear')
-    
-            term1 = self.ne0*(1 + z)/self.chi_g[z_ind]**2*Peg_interp(l/self.chi_g[z_ind]/fp.h)*(fp.h**-3)*Nfz/self.Nf
-            term2 = pz[pz_index]*(self.chi_g[z_ind]**(-2))/self.dchi_dz[z_ind]*Pfg_interp(l/self.chi_g[z_ind]/fp.h)*(fp.h**-3)*(self.dm_bar[z_ind] + DM_host - self.D_bar)
-    
+
+            k_eval = l/self.chi_g[z_ind]/fp.h   # uses this branch's chi_g[z_ind]
+            Peg_at_l = np.interp(k_eval, peg.k_over_h, peg.pk) # Mpc^3 h^-3, to get Mpc^-3: multiply by h^-3
+            Pfg_at_l = np.interp(k_eval, pfg.k_over_h, pfg.pk)
+
+            term1 = self.ne0*(1 + z)/self.chi_g[z_ind]**2*Peg_at_l*(fp.h**-3)*Nfz/self.Nf
+            term2 = pz[pz_index]*(self.chi_g[z_ind]**(-2))/self.dchi_dz[z_ind]*Pfg_at_l*(fp.h**-3)*(self.dm_bar[z_ind] + DM_host - self.D_bar)
+
             cl_Dg = term1 + term2
             term1_return = term1
             term2_return = term2

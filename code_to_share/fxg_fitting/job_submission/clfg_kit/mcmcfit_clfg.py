@@ -18,6 +18,7 @@ from tqdm import tqdm
 import nestle
 import dynesty
 from dynesty import NestedSampler
+from multiprocessing import Pool
 from scipy.stats import chi2
 
 import pymaster as nmt

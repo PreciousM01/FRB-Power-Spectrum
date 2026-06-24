@@ -1,0 +1,25 @@
+import numpy as np, h5py, importlib, sys
+OUT="./dummy_data"; zs=[0.075,0.15,0.25,0.35,0.45]
+with h5py.File(f"{OUT}/frb_catalog.h5","r") as fh:
+    dm_select = fh["dm_od"][:] + fh["dm_ave"][()]
+fit_files=[f"{OUT}/fit_z{z:.3f}.h5" for z in zs]
+plot_files=[f"{OUT}/plot_z{z:.3f}.h5" for z in zs]
+theta=[60,-1,4000,1.5,-1.5,1]
+
+def run(mod):
+    m=importlib.import_module(mod)
+    f=m.cl_Dg_fit(dm_select); f.read_data(fit_files,plot_files); f.convolve=False
+    return f.combined_model(*theta), f.log_likelihood(np.array(theta), f.l_combined, f.cl_combined, f.err_combined) if hasattr(f,'cov_inv') else None
+
+# original
+m0=importlib.import_module("mcmcfit_orig")
+f0=m0.cl_Dg_fit(dm_select); f0.read_data(fit_files,plot_files); f0.convolve=False
+out0=f0.combined_model(*theta)
+# optimized
+m1=importlib.import_module("mcmcfit")
+f1=m1.cl_Dg_fit(dm_select); f1.read_data(fit_files,plot_files); f1.convolve=False
+out1=f1.combined_model(*theta)
+
+print("max abs diff:", np.max(np.abs(out0-out1)))
+print("max rel diff:", np.max(np.abs((out0-out1)/out0)))
+print("identical:", np.allclose(out0,out1,rtol=1e-12,atol=0))

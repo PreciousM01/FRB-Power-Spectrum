@@ -150,9 +150,6 @@ class cl_Dg_fit:
         self.Hz_grid = self.pm.get_H(self.z_grid) # km/s/Mpc
         self.dchi_dz_grid = self.c/self.Hz_grid # Mpc
 
-        self._pc_cm3_to_Mpc2 = (1.0 * u.pc * u.cm**-3).to(u.Mpc**-2).value
-        self._Mpc2_to_pc_cm3 = (1.0 * u.Mpc**-2).to(u.pc * u.cm**-3).value
-
         # prepare quantities needed for the sub-bins
         self.sub_bin = sub_bin
         self.sub_bin_w = sub_bin_w
@@ -336,18 +333,10 @@ class cl_Dg_fit:
         return n_norm
     
     def get_p_z_norm(self, ALPHA, Z_STAR):
-
-        # Within one likelihood evaluation, combined_model calls this once per z-bin (and twice per sub-bin) with IDENTICAL (ALPHA, Z_STAR). 
-        # The underlying incomp_gamma chain is ~70% of runtime, so cache on the parameter pair: recompute only when ALPHA or Z_STAR actually changes.
-        cache = getattr(self, "_pz_cache", None)
-        if cache is not None and cache[0] == ALPHA and cache[1] == Z_STAR:
-            return cache[2], cache[3]
-
+    
         n = self.get_n_z_norm(ALPHA, Z_STAR)
-        pz = 4*np.pi*self.chi_grid**2*n*self.dchi_dz_grid/self.Nf
-
-        self._pz_cache = (ALPHA, Z_STAR, pz, n)
-        return pz, n
+    
+        return 4*np.pi*self.chi_grid**2*n*self.dchi_dz_grid/self.Nf, n
 
     def compute_Nfz(self, pz, zs):
         # number of FRBs beyond redshift z
@@ -374,7 +363,7 @@ class cl_Dg_fit:
                 Nfz = self.compute_Nfz(pz, [z])[0]
 
                 dm_bar = self.sub_bin_dm_bar[z_ind][i]
-                DM_host = (self.DM_MWH + DM_H_bar/(1 + z)) * self._pc_cm3_to_Mpc2
+                DM_host = ((self.DM_MWH + DM_H_bar/(1 + z)) * u.pc * u.cm**-3).to(u.Mpc**-2).value
                 
                 pm = self.sub_bin_pm[z_ind] # find the sub bin power spectrum
                 pfg = get_biased_cross_spectrum(pm.k_over_h, pm.z[i], pm.pk[i], bf, bg)
@@ -411,7 +400,7 @@ class cl_Dg_fit:
         # gaussian beam suppression
         cl_Dg *= np.exp(-l**2/l_cut**2) # Mpc^-2
         
-        return cl_Dg * self._Mpc2_to_pc_cm3 # from Mpc^-2 back to pc cm^-3
+        return (cl_Dg * u.Mpc**-2).to(u.pc * u.cm**-3).value # from Mpc^-2 back to pc cm^-3
 
     def combined_model(self, DM_H_bar, cut_scale, l_cut, bf0, ALPHA, Z_STAR):
 
