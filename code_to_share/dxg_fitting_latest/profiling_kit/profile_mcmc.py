@@ -32,7 +32,7 @@ import pstats
 import matplotlib
 matplotlib.use("Agg")   # headless: corner.corner won't try to open a window
 
-import mcmcfit_orig as mf
+import mcmcfit as mf
 
 # ---------------------------------------------------------------------------
 # 1. Point these at your data. (Here: the dummy data in ./dummy_data)
