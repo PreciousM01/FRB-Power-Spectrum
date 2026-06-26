@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import mcmcfit as mf
 
 # --- 1. real measurement files (redshift order, low z first) ---
-DATA_DIR = "../dxg_measurement"                 # <-- EDIT
+DATA_DIR = "../../dxg_measurement"               
 FILES = sorted(glob.glob(os.path.join(DATA_DIR, "*.h5")))
 assert len(FILES) == 5, f"expected 5 files, found {len(FILES)}"
 print("Using:", [os.path.basename(f) for f in FILES])
